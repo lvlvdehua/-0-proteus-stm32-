@@ -4,7 +4,7 @@ Stm32.docx就是我写的笔记
 
 STM32.PDSPRJ是我的Protecs工程
 
-STM32F10xxx参考手册（中文）.pdf是stm32的官方参考手册,我目前就依据这个进行学习
+STM32F10xxx参考手册.pdf是stm32的官方参考手册,我目前就依据这个进行学习
 
 oled是江协科的底层其余均是我自己编写的
 
