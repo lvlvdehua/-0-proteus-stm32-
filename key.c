@@ -57,7 +57,7 @@ void key_read(void)
 {
     if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0) == 0)
     {
-        GPIO_ResetBits(GPIOB, GPIO_Pin_3);   // 点亮 LED1（低电平亮）
+        GPIO_ResetBits(GPIOB, GPIO_Pin_3);   // 点亮 LED1(低电平亮)
         while (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0) == 0);
         GPIO_SetBits(GPIOB, GPIO_Pin_3);     // 熄灭 LED1
         num++;
@@ -65,7 +65,7 @@ void key_read(void)
 
     if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == 1)
     {
-        GPIO_SetBits(GPIOB, GPIO_Pin_4);     // 点亮 LED2（高电平亮）
+        GPIO_SetBits(GPIOB, GPIO_Pin_4);     // 点亮 LED2(高电平亮)
         while (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == 1);
         GPIO_ResetBits(GPIOB, GPIO_Pin_4);   // 熄灭 LED2
         num--;

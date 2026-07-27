@@ -34,6 +34,14 @@ uint32_t Usart_Type_Num(USART_TypeDef* Usart_1234);
 void Usart_send_Data(USART_TypeDef* Usartx, unsigned char Data);
 void Usart_send_string(USART_TypeDef* Usartx, char *string);	//传入你需要发送的字符串的地址
 void Usart_Printf(USART_TypeDef* Usartx, char *format, ...);
+void Usart_receive_string(USART_TypeDef* Usartx);
 
+
+
+
+extern volatile uint8_t array_line;			//对应二维数组行
+extern volatile uint8_t array_column;			//对应二维数组列
+extern char Usart_receive_array[64][64];
+extern volatile uint8_t Usart_Exti_flag;
 
 #endif

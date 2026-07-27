@@ -4,17 +4,32 @@
 #include "key.h"
 
 #define None 0
+
 															//
 /*=========================================================*/
 
 
 
-/*================Ê¹ÄÜUsart´®¿ÚÊ±ÖÓµÄÈ«¾ÖÊı×é===============*/
+/*===================Êı×éÒÔ¼°±äÁ¿¶¨ÒåÇø=====================*/
 static uint32_t RCC_Usart_Init_array[4] = {None, RCC_APB2Periph_USART1, RCC_APB1Periph_USART2,  RCC_APB1Periph_USART3};
+//Ê¹ÄÜUsart´®¿ÚÊ±ÖÓ
+
+static uint8_t NVIC_Usart_Init[4] = {None, USART1_IRQn, USART2_IRQn, USART3_IRQn};
+//NVICÓëusart¶ÔÓ¦µÄÊı×é
+
+volatile uint8_t Usart_Exti_flag = 0;
+//´®¿ÚÖĞ¶Ï±êÖ¾Î»
+
+char Usart_receive_array[64][64];
+volatile uint8_t array_line = 0;			//¶ÔÓ¦¶şÎ¬Êı×éĞĞ
+volatile uint8_t array_column = 0;			//¶ÔÓ¦¶şÎ¬Êı×éÁĞ
 //
 
 
+void Usart_receive_string(USART_TypeDef* Usartx);
+void Usart_Exti(USART_TypeDef* Usartx);
 
+volatile uint32_t Usart_receive_num = 0;
 /*==========´Ëº¯Êı½« USART ÀàĞÍ×ª»»ÎªÊı×Ö²¢·µ»Ø=============*/
 uint32_t Usart_Type_Num(USART_TypeDef* Usart_1234)
 {
@@ -30,19 +45,19 @@ uint32_t Usart_Type_Num(USART_TypeDef* Usart_1234)
 void Usart_Init(USART_TypeDef* Usartx, GPIO_TypeDef* GPIO_ABCD, uint8_t GPIO_TX_PIN, uint8_t GPIO_RX_PIN, uint32_t BaudRate)
 {
 	uint8_t GPIO_APB_Init_Num = 0;
-	uint8_t Usart_APB_Init_Num = 0;
+	uint8_t Usart_Init_Num = 0;
 
 	GPIO_APB_Init_Num = GPIO_Type_Num(GPIO_ABCD);
-	Usart_APB_Init_Num = Usart_Type_Num(Usartx);
+	Usart_Init_Num = Usart_Type_Num(Usartx);
 	
-	if(Usart_APB_Init_Num == 1)	
+	if(Usart_Init_Num == 1)	
 	{
-		RCC_APB2PeriphClockCmd(RCC_Usart_Init_array[Usart_APB_Init_Num], ENABLE);
+		RCC_APB2PeriphClockCmd(RCC_Usart_Init_array[Usart_Init_Num], ENABLE);
 	}
 	
-	else if (Usart_APB_Init_Num == 2 || Usart_APB_Init_Num == 3)			//µ±USARTÎª2Ê±Ê¹ÄÜAPB1
+	else if (Usart_Init_Num == 2 || Usart_Init_Num == 3)			//µ±USARTÎª2Ê±Ê¹ÄÜAPB1
 	{
-		RCC_APB1PeriphClockCmd(RCC_Usart_Init_array[Usart_APB_Init_Num], ENABLE);
+		RCC_APB1PeriphClockCmd(RCC_Usart_Init_array[Usart_Init_Num], ENABLE);
 	}
 	
     RCC_APB2PeriphClockCmd(RCC_GPIO_Init_array[GPIO_APB_Init_Num], ENABLE);
@@ -66,10 +81,28 @@ void Usart_Init(USART_TypeDef* Usartx, GPIO_TypeDef* GPIO_ABCD, uint8_t GPIO_TX_
     USART_Init_structure.USART_HardwareFlowControl	= USART_HardwareFlowControl_None;	//ÎŞÊ¹ÄÜ
 	
     USART_Init(Usartx, &USART_Init_structure);
-
+	
+	//NVIC³õÊ¼»¯
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
+	
+	NVIC_InitTypeDef NVIC_Init_structure;
+	NVIC_Init_structure.NVIC_IRQChannel = NVIC_Usart_Init[Usart_Init_Num];
+	NVIC_Init_structure.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_Init_structure.NVIC_IRQChannelSubPriority = 1;
+	NVIC_Init_structure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_Init_structure);
+	
+	USART_ITConfig(Usartx, USART_IT_RXNE, ENABLE);   // Ê¹ÄÜ½ÓÊÕÖĞ¶Ï
 	USART_Cmd(Usartx, ENABLE);
 }
 //
+void USART1_IRQHandler(void)
+{
+	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET) //¼ì²âµ½RDR´¦ÓÚ·Ç¿Õ×´Ì¬Ê±½øĞĞ¶ÁÈ¡
+	{
+		Usart_receive_string(USART1); 
+	}
+}
 
 
 
@@ -93,7 +126,7 @@ void Usart_send_string(USART_TypeDef* Usartx, char *string)		//´«ÈëÄãĞèÒª·¢ËÍµÄ×
 
 void Usart_Printf(USART_TypeDef* Usartx, char *format, ...)
 {
-    char string[256];							//ÏòÕ»ÉêÇë256×Ö½ÚµÄÁ¬Ğø¿Õ¼ä,ÓÃÀ´´æ·ÅÎÒÃÇÒª·¢ËÍµÄ×Ö·û´®µÄ¸ñÊ½»¯°æ±¾			
+    char string[100];							//ÏòÕ»ÉêÇë100×Ö½ÚµÄÁ¬Ğø¿Õ¼ä,ÓÃÀ´´æ·ÅÎÒÃÇÒª·¢ËÍµÄ×Ö·û´®µÄ¸ñÊ½»¯°æ±¾			
     va_list arg;								//´´½¨Ò»¸öÖ¸Õë±äÁ¿,ÓÃÀ´´«À´formatºó²»È·¶¨µÄ±äÁ¿,
 												//ÀıÈç("Usart = ", Usart_Type_Num()), ·¢ËÍ½á¹ûÊÇUsart = (Usart_Type_Num()ÖĞ·µ»ØµÄÊı×Ö)
     va_start(arg, format);						//³õÊ¼»¯Õâ¸öÖ¸Õë,Ê¹Æä¾«×¼Ö¸ÏòµÚÒ»¸ö¿É±ä²ÎÊıµÄµØÖ·
@@ -102,4 +135,32 @@ void Usart_Printf(USART_TypeDef* Usartx, char *format, ...)
 															//»º³åÇøµÄ×î´ó³¤¶È,¸ñÊ½×Ö·û´®ÒÔ¼°±äÁ¿
     va_end(arg);								//ÇåÀíÖ¸Õë
     Usart_send_string(Usartx, string);			//½«×Ö·û´®ËÍÈëUsart_send_string()
+}
+
+
+
+void Usart_receive_string(USART_TypeDef* Usartx)
+{
+	char data = USART_ReceiveData(Usartx);
+    static uint8_t lastline_empty = 0;   // ¼ÇÂ¼ÉÏ´ÎÊÇ·ñÎª»»ĞĞ
+	if(data == '\n'	|| data == '\r')		//¼ì²âµ½»»ĞĞ·û½øĞĞ
+	{
+		if(lastline_empty ==  0)								
+		{
+			Usart_receive_array[array_line][array_column] = '\0';	//ÔÚ´æÈëµÄ×Ö·û´®Ä©Î²Ìî½áÊø·û
+			array_column = 0;										//Ê¹¶şÎ¬Êı×éµÄÁĞÎª0
+			array_line++;											//»»ĞĞ
+			if(array_line == 64) array_line = 0;					//·ÀÖ¹Êı×éÒç³ö
+			Usart_Exti_flag = 1;				//¸Ã±êÖ¾Î»¿ÉÓÚÖ÷Ñ­»·µ÷ÓÃÒÔ±ã¸÷¸ö×Ö·û´®×öÇø·Ö				
+		}
+		lastline_empty = 1;	
+	}
+	else
+	{
+		lastline_empty = 0;
+		if(array_column < 63)								//µçÄÔ²»·¢ËÍ»»ĞĞ·ûÇÒ¶şÎ¬Êı×éµÄÁĞÎ´Òç³ö¾Í¼ÌĞøÍùÁĞÌîĞ´			
+		{	
+			Usart_receive_array[array_line][array_column++] = data;	//Íù¶şÎ¬Êı×éµÄÁĞÌîĞ´Êı¾İ
+		}
+	}
 }
