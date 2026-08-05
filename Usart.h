@@ -24,7 +24,7 @@ void Usart_Init(USART_TypeDef* Usartx, GPIO_TypeDef* GPIO_ABCD, uint8_t GPIO_TX_
   * @param	Usart_1234			指向 USART 的指针,直接传入USART1,USART2,USART3即可 
   * @return 传出的值固定为1,2,3 若为0证明传入的值有问题	
   */
-uint32_t Usart_Type_Num(USART_TypeDef* Usart_1234);
+uint8_t Usart_Type_Num(USART_TypeDef* Usart_1234);
 //
 
 /** @brief	发送一个字节

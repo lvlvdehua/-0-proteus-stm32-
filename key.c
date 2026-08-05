@@ -3,7 +3,7 @@
 #define None 0
 
 
-int num = 0;   // 按键加减的目标变量
+int Key_num = 0;   // 按键加减的目标变量
 uint32_t GPIO_Type_Num(GPIO_TypeDef* GPIO_ABCD);
 /*=========================================================*/
 
@@ -22,7 +22,7 @@ const uint32_t RCC_GPIO_Init_array[5] = {None, RCC_APB2Periph_GPIOA, RCC_APB2Per
 
 
 /*===================通用 GPIO 初始化函数===================*/
-void key_init(GPIO_TypeDef* GPIO_ABCD, GPIOMode_TypeDef Mode, uint16_t GPIO_Pin_Num, GPIOSpeed_TypeDef Speed)
+void GPIO_INIT(GPIO_TypeDef* GPIO_ABCD, GPIOMode_TypeDef Mode, uint16_t GPIO_Pin_Num, GPIOSpeed_TypeDef Speed)
 {
 	uint16_t GPIO_RCC_Init_Num = GPIO_Type_Num(GPIO_ABCD);
 	
@@ -50,7 +50,7 @@ uint32_t GPIO_Type_Num(GPIO_TypeDef* GPIO_ABCD)
 
 int num_void()
 {
-	return num;
+	return Key_num;
 }
 
 void key_read(void)
@@ -60,7 +60,7 @@ void key_read(void)
         GPIO_ResetBits(GPIOB, GPIO_Pin_3);   // 点亮 LED1(低电平亮)
         while (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0) == 0);
         GPIO_SetBits(GPIOB, GPIO_Pin_3);     // 熄灭 LED1
-        num++;
+        Key_num++;
     }
 
     if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == 1)
@@ -68,6 +68,6 @@ void key_read(void)
         GPIO_SetBits(GPIOB, GPIO_Pin_4);     // 点亮 LED2(高电平亮)
         while (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == 1);
         GPIO_ResetBits(GPIOB, GPIO_Pin_4);   // 熄灭 LED2
-        num--;
+        Key_num--;
     }
 }
