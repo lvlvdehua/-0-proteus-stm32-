@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "key.h"
+#include "Type_Num.h"
 
 
 /*======================define定义区==========================*/
@@ -73,15 +74,7 @@ void Usart_Exti(USART_TypeDef* Usartx);
 //
 
 
-/*==========此函数将 USART 类型转换为数字并返回=============*/
-uint8_t Usart_Type_Num(USART_TypeDef* Usart_1234)
-{
-	if(Usart_1234 == USART1)	return 1;
-	if(Usart_1234 == USART2)	return 2;
-	if(Usart_1234 == USART3)	return 3;
-	else	return None;
-}
-//
+
 
 
 /*==================通用 USART 初始化函数==================*/

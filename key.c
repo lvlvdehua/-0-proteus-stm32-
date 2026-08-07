@@ -36,16 +36,6 @@ void GPIO_INIT(GPIO_TypeDef* GPIO_ABCD, GPIOMode_TypeDef Mode, uint16_t GPIO_Pin
 }
 //
 
-/*=============此函数将 GPIO 类型转换为数字并返回=============*/
-uint32_t GPIO_Type_Num(GPIO_TypeDef* GPIO_ABCD)
-{
-	if(GPIO_ABCD == GPIOA)	return 1;
-	if(GPIO_ABCD == GPIOB)	return 2;
-	if(GPIO_ABCD == GPIOC)	return 3;
-	if(GPIO_ABCD == GPIOD)	return 4;
-	else	return None;
-}
-//
 
 
 int num_void()

@@ -26,6 +26,7 @@
   * @note		默认只有GPIOA-D,如需增加则请扩容key.c中的GPIO_Type_Num()函数与相应数组
   */
 void GPIO_INIT(GPIO_TypeDef* GPIO_ABCD, GPIOMode_TypeDef Mode, uint16_t GPIO_Pin_Num, GPIOSpeed_TypeDef Speed);
+
 void key_read(void);
 int num_void(void);
 

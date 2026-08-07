@@ -45,6 +45,6 @@
 void Timx_Init(TIM_TypeDef* Timx, uint16_t psc, uint16_t arr, uint8_t mode);
 
 
-void Timx_Pwm_Init(TIM_TypeDef* Timx, uint16_t psc, uint16_t arr, uint8_t mode, uint16_t crr, uint8_t Pwm_mode);
+void Timx_Pwm_Init(TIM_TypeDef* Timx, uint16_t psc, uint16_t arr, uint8_t mode, uint16_t crr, uint8_t Pwm_mode, uint8_t channnel);
 
 #endif

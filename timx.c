@@ -1,21 +1,43 @@
 #include "stm32f10x.h"                  // Device header
 #include "key.h"
+#include "Type_Num.h"
 
+/*======================define定义区==========================*/
+#define	NVIC_pree  1 		//NVIC的抢占优先级,越小越优先响应
+#define	NVIC_sub 1				//NVIC的响应优先级,抢占优先级相同时,响应优先级越小越有限
+
+//
+
+/**
+  * @brief 存储通用定时器APB初始化时的值
+  */	
 static uint16_t timx_APB_Init[6] = {0, 0, 	RCC_APB1Periph_TIM2, RCC_APB1Periph_TIM3, RCC_APB1Periph_TIM4, 0};
+
+/**
+  * @brief 存储通用定时器在进行中断配置时对应的值
+  */	
 static uint8_t NVIC_Timx_Init[6] = {0, 0, TIM2_IRQn, TIM3_IRQn, TIM4_IRQn, 0};
 
+/**
+  * @brief 通用定时器PWM模式的初始化模式配置
+  */	
 static uint16_t Timx_Pwm_Init_Mode[1][3] = {	{TIM_OCMode_PWM1, TIM_OutputState_Enable, TIM_OCPolarity_High}
 																												};
+
+/**
+  * @brief 存储通用定时器通道函数的两个函数数组指针
+  */																												
+static void(*Tim_OC_INIT[])(TIM_TypeDef*, TIM_OCInitTypeDef*) = {0, TIM_OC1Init, TIM_OC2Init, TIM_OC3Init, TIM_OC4Init};
+
+static void(*Tim_OC_PreloadConfig[])(TIM_TypeDef*, uint16_t) = {0, 	TIM_OC1PreloadConfig,
+																		TIM_OC2PreloadConfig, 
+																		TIM_OC3PreloadConfig,
+																		TIM_OC4PreloadConfig};
+																												
 /**
   * @brief  通用定时器模式配置
   * @param  这个数组只控制通用定时器的计数模式与分频模式,				
-  *
-  *
-  *
-  *
-  *
   */
-
 static uint16_t Timx_Init_Mode[15][2] = {	{TIM_CounterMode_Up, 			TIM_CKD_DIV1},
 											{TIM_CounterMode_Down, 			TIM_CKD_DIV1},
 											{TIM_CounterMode_CenterAligned1,TIM_CKD_DIV1},
@@ -33,28 +55,8 @@ static uint16_t Timx_Init_Mode[15][2] = {	{TIM_CounterMode_Up, 			TIM_CKD_DIV1},
 											{TIM_CounterMode_CenterAligned1, TIM_CKD_DIV4},
 											{TIM_CounterMode_CenterAligned2, TIM_CKD_DIV4},
 											{TIM_CounterMode_CenterAligned3, TIM_CKD_DIV4},		};
-/*======================define定义区==========================*/
-#define	NVIC_pree  1 		//NVIC的抢占优先级,越小越优先响应
-#define	NVIC_sub 1				//NVIC的响应优先级,抢占优先级相同时,响应优先级越小越有限
-
-
-
 
 //
-
-
-uint8_t Timx_Type_Num(TIM_TypeDef* Timx)
-{
-	if(Timx == TIM1)		return 1;
-	else if(Timx == TIM2)	return 2;
-	else if(Timx == TIM3)	return 3;
-	else if(Timx == TIM4)	return 4;
-	else if(Timx == TIM5)	return 5;
-	else if(Timx == TIM6)	return 6;
-	else if(Timx == TIM7)	return 7;
-	else if(Timx == TIM8)	return 8;
-	else	return 0;
-}
 
 
 void Timx_Init(TIM_TypeDef* Timx, uint16_t psc, uint16_t arr, uint8_t mode)
@@ -83,7 +85,7 @@ void Timx_Init(TIM_TypeDef* Timx, uint16_t psc, uint16_t arr, uint8_t mode)
 	TIM_Cmd(Timx, ENABLE);
 }
 
-void Timx_Pwm_Init(TIM_TypeDef* Timx, uint16_t psc, uint16_t arr, uint8_t mode, uint16_t crr, uint8_t Pwm_mode)
+void Timx_Pwm_Init(TIM_TypeDef* Timx, uint16_t psc, uint16_t arr, uint8_t mode, uint16_t crr, uint8_t Pwm_mode, uint8_t channnel)
 {
 	uint8_t Tim_num = Timx_Type_Num(Timx);	
 	RCC_APB1PeriphClockCmd(timx_APB_Init[Tim_num], ENABLE);
@@ -98,11 +100,12 @@ void Timx_Pwm_Init(TIM_TypeDef* Timx, uint16_t psc, uint16_t arr, uint8_t mode, 
 	TIM_OCInitTypeDef Tim_Pwm_structure;
 	Tim_Pwm_structure.TIM_OCMode		=	Timx_Pwm_Init_Mode[Pwm_mode][0];
 	Tim_Pwm_structure.TIM_OutputState	=	Timx_Pwm_Init_Mode[Pwm_mode][1];
-	Tim_Pwm_structure.TIM_Pulse			=	crr;					//占空比50％,亮度中等
+	Tim_Pwm_structure.TIM_Pulse			=	crr;					
 	Tim_Pwm_structure.TIM_OCPolarity	=	Timx_Pwm_Init_Mode[Pwm_mode][2];
-	TIM_OC1Init(Timx, &Tim_Pwm_structure);
 	
-	TIM_OC1PreloadConfig(Timx, TIM_OCPreload_Enable);
+	Tim_OC_INIT[channnel](Timx, &Tim_Pwm_structure);		
+	
+	Tim_OC_PreloadConfig[channnel](Timx, TIM_OCPreload_Enable);
     TIM_ARRPreloadConfig(Timx, ENABLE);
 
     TIM_Cmd(Timx, ENABLE);
